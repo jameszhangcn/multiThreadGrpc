@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+package structure;
+
+import "common.proto";
+
+message Pst
+{
+    uint32  dst_proc_id = 10;
+    uint32  src_proc_id = 11;
+    uint32  dst_ent = 20;
+    uint32  dst_inst = 21;
+    uint32  src_ent = 30;
+    uint32  src_inst = 31;
+    uint32  prior = 40;
+    uint32  route = 45;
+    uint32  event = 50;
+    uint32  region = 55;
+    uint32  pool = 60;
+    uint32  selector = 65;
+    uint32  interface_version = 70;
+    uint32  cell_id = 75;
+}
+
+message CuCpID
+{
+    uint32  cp_id   = 10;
+    uint32  cell_id = 20;
+	uint32  ue_id   = 30;
+	uint32  rb_id   = 40;
+}
+
+message CuUpID
+{
+    uint32  up_id   = 10;
+    uint32  cell_id = 20;
+	uint64  ue_id   = 30;
+	uint32  rb_id   = 40;
+}
+
+message SuSpID
+{
+    uint32  su_id = 10;
+	uint32  sp_id = 20;
+}
+
+message CpUpHdr
+{
+    Pst pst = 10;
+	CuCpID  cu_cp_id = 20;
+	CuUpID  cu_up_id = 30;
+	SuSpID  su_sp_id = 40;
+}
+
+enum TunnelType{
+    DL = 0;
+    UL = 1;
+    Dl_DATA_FWD = 2;
+    UL_DATA_FWD = 3;
+    LIPA = 4;
+}
+
+enum InterfaceType{
+    S1 = 0;
+    V1 = 1;
+    X2 = 2;
+}
+
+enum HandoverType {
+    NONE = 0;
+    S1_BASED = 1;
+    X2_BASED = 2;
+    INTRA_BBU = 3;
+    INTRA_DU_BBU = 4;
+    INTER_DU_BBU = 5;
+}
+
+message SecurityConfigure {
+    uint32  algorithm_type = 10;
+    repeated uint32 encryption_key = 20;
+}
+
+message GtpTunnelId {
+    uint32  ue_id = 10;
+    uint32  rb_id = 20;
+    TunnelType  tnl_type = 30;
+    uint32  tnl_priority = 40;
+}
+
+message GtpTunInfo {
+    GtpTunnelId tnl_id = 10;
+    InterfaceType   interface_type = 20;
+    common.IpAddress   dst_addr = 30;
+    common.IpAddress   src_addr = 31;
+    uint32  rem_teid = 40;
+    bool    ho_src_enodeb = 50;
+    HandoverType  ho_type = 51;
+    bool    id_fullCfg = 60;
+    uint32  rlc_mode = 61;
+}
+
+message RlcInfo {
+    uint32  direction = 10;
+    uint32  mode = 20;
+    bool    status_rep_require = 30;
+    uint32  pdcp_sn_size = 40;
+}
+
+message HeaderCompressConfigure {
+    bool    hdr_comp_used = 10;
+    uint32  max_cid = 20;
+    repeated uint32 profile_list = 30;
+}
+
+message PDCPConfigure {
+    uint32  sn_len = 10;
+    uint32  qci = 20;
+    uint32  discard_timer = 30;
+    RlcInfo rlc_info = 40;
+    HeaderCompressConfigure    hdr_cmp_cfg = 50;
+}
+

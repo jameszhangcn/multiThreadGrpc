@@ -1,0 +1,39 @@
+/*------------------------------------------------------------------------------
+ *
+ * FILE    :mav_common.proto
+ * MODULE  :5G RAN
+ * DATE    :2019/10/22  14:08:24
+ * AUTHOR  :Fisher Yu
+ *
+ *------------------------------------------------------------------------------
+ *
+ * FILE DESCRIPTION
+ *
+ * Describe here
+ *
+ *------------------------------------------------------------------------------
+ *
+ * Copyright 2006-2019, Mavenir Systems Ltd.
+ * ALL RIGHTS RESERVED
+ *
+ * License to copy, use or disseminate this computer program,
+ * whether in part or in whole are expressly forbidden.
+ *------------------------------------------------------------------------------
+ * Change Log(Cursor at here when add new log)
+ *------------------------------------------------------------------------------
+ * DATE    :2019/10/22  14:08:24
+ * AUTHOR  :Fisher Yu
+ * DESCRIP :Created
+ *------------------------------------------------------------------------------
+ */
+
+syntax = "proto3";
+
+//option java_multiple_files = true;
+//option java_package = "io.grpc.mav.sctp_adaptor";
+//option java_outer_classname = "sctp_adaptor";
+//option objc_class_prefix = "Mav";
+
+package MavCommonAdaptor;
+
+message Empty {}
