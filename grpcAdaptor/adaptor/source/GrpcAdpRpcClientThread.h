@@ -38,9 +38,11 @@
 
 #include "CucpService.h"
 #include "../../../include/GrpcAdpStru.h"
+#include "../../../include/EbmCfmCb.h"
 #include "structure.pb.h"
 #include "srvEbm.pb.h"
 #include "srvCp.pb.h"
+#include "string.h"
 
 class GrpcAdpRpcClientThread : public EbmClient
 {
@@ -49,7 +51,6 @@ public:
         : mThreadInstId(0)
         , mThreadReady(false)
     {
-        mEbmServerTarget = "127.0.0.1:9027";
     }
     void init(uint32_t mThreadInstId);
     virtual void on_init();
@@ -60,6 +61,12 @@ public:
     {
         return mThreadInstId;
     }
+
+    void set_ebm_ip_port(std::string ebmID)
+    {
+        mEbmServerTarget = get_ebm_ip_port(ebmID.c_str());
+    }
+
     inline std::string& ebmServerTarget() {return mEbmServerTarget;}
     int SendSecurityCfg(CuCpUpHdrG* cp_up_hdr, SecurityConfigureG *secCfg);
     void ResponseHandler(ServiceClientCallData* aClientCallData);

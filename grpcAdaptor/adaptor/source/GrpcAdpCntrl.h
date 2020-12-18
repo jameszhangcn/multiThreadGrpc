@@ -41,6 +41,42 @@
 #include "GrpcAdpRpcServerThread.h"
 #include "GrpcAdpRpcClientThread.h"
 
+using namespace std;
+class EbmGrpcClient{
+    public:
+        string getCpID() const {return cpID;}
+        string getUpID() const {return upID;}
+        long getCpInstID() const {return cpInst;}
+
+        EbmGrpcClient(string m_cpID, long m_cpInst, string m_upID):cpID(m_cpID), cpInst(m_cpInst), upID(m_upID) 
+        {}
+
+        bool operator == (const EbmGrpcClient &client) const 
+        {
+            return (cpID == client.cpID) && (upID == client.upID) && (cpInst == client.cpInst); 
+        }
+
+    private:
+        string cpID;
+        string upID;
+        long cpInst;
+};
+
+namespace std
+{
+    template<>
+    struct hash<EbmGrpcClient>
+    {
+        size_t operator() (const EbmGrpcClient & s) const noexcept
+        {
+            return hash<decltype(s.getCpID())>() (s.getCpID()) +
+                   hash<decltype(s.getCpInstID())>() (s.getCpInstID()) +
+                   hash<decltype(s.getUpID())>() (s.getUpID());
+        }
+    };
+
+}
+
 namespace mav
 {
         
@@ -67,25 +103,37 @@ namespace mav
 
         inline GrpcAdpRpcClientThread& getGrpcClientThread()
         {
-            return mRpcClientThread;
+            return *mRpcClientThread[0];
         }
 
-        GrpcAdpRpcClientThread* getRpcClientThread()
+        inline GrpcAdpRpcClientThread& getGrpcClientThread_M(EbmGrpcClient &grpcClient)
         {
-            return &mRpcClientThread;
+            return *mRpcClientThread[mEbmClientMap[grpcClient]];
         }
+
         bool init();
         bool deinit();
         void join_threads();
+        void client_lock(int clientId);
+        void client_unlock(int clientId);
+        int create_client(char* cuCpID, long cuCpInst, char* cuUpID);
+        int destroy_client(string cuCpID, long cuCpInst, string cuUpID);
+        int get_free_client_idx(GrpcAdpRpcClientThread* threadID);
+        int release_client_idx(int idx);
+
 
     private:
         static GrpcAdpCntrl* mInstance;
         static int mInstId;
         int mThreadNum;
+        pthread_mutex_t mClientMutex;
         std::vector<GrpcWorker *> mWorkerInstance;
         unsigned char mThreadInstanceIdGen;
         GrpcAdpRpcServerThread mRpcServerThread;
-        GrpcAdpRpcClientThread mRpcClientThread;
+        GrpcAdpRpcClientThread* mRpcClientThread[MAX_GRPC_CLIENT_NUM];
+
+        //client multi instance
+        std::unordered_map<EbmGrpcClient, int > mEbmClientMap;
 
         GrpcAdpCntrl();
         ~GrpcAdpCntrl() {}
@@ -97,5 +145,7 @@ namespace mav
         int initGrpcClientConfig();
         int startGrpcServerThread(unsigned char& aThreadInstanceId);
         int startGrpcClientThread(unsigned char& aThreadInstanceId);
+        int createGrpcClient(string cuCpID, long cuCpInst, string cuUpID);
+        int destroyGrpcClient(string cuCpID, long cuCpInst, string cuUpID);
     };
 } // namespace mav

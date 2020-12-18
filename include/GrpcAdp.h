@@ -43,12 +43,21 @@ extern "C" {
 
 #include "GrpcAdpStru.h"
 
+#define MAX_GRPC_CLIENT_NUM 20
+
+#define CPU_SET(cpu, cpusetp)
+#define CPU_CLR(cpu, cpusetp)
+#define CPU_ISSET(cpu, cpusetp)
+#define CPU_ZERO(cpusetp)
+
 extern void mav_init();
 extern void start_grpc_server();
 extern void join_grpc_server();
 extern int  send_sec_cfg_req(CuCpUpHdrG* cucp_up_hdr, SecurityConfigureG *secCfg);
-extern int  start_grpc_client(uint32_t cp_id, uint32_t up_id, IpAddressG *up_ip, uint32_t dst_port);
+extern int  send_sec_cfg_req_m(CuCpUpHdrG* cucp_up_hdr, SecurityConfigureG *secCfg);
 
+extern int  start_grpc_client(uint32_t cp_id, uint32_t up_id, IpAddressG *up_ip, uint32_t dst_port);
+extern void create_grpc_client(char* cp_id, pthread_t tid, char* up_id);
 
 #ifdef __cplusplus
 }

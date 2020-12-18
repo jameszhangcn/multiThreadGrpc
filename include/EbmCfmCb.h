@@ -7,5 +7,7 @@ extern void update_route_table(CuCpUpHdrG* cpUpHdr);
 
 extern void send_sec_cfg_cfm();
 
+extern char* get_ebm_ip_port(char* ebmID);
+
 
 #endif

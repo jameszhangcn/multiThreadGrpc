@@ -42,6 +42,8 @@
 #include "GrpcAdp.h"
 
 static int send_sec_cfg_count = 0;
+static int send_sec_cfg_count_m = 0;
+
 void mav_init()
 {
     ccTrace();
@@ -53,12 +55,20 @@ void init_grpc_server_config()
     ccTrace();
     printf("Init grpc server config");
 }
+
 void start_grpc_server()
 {
     ccTrace("start_grpc_server");
     mav::GrpcAdpCntrl::getInstance()->init();
     printf("testing jianzhag");
     //mav::GrpcAdpCntrl::getInstance()->join_threads();
+}
+
+void create_grpc_client(char* cp_id, pthread_t tid, char* up_id)
+{
+    ccTrace("create_grpc_client");
+    mav::GrpcAdpCntrl::getInstance()->create_client(cp_id, long(tid), up_id);
+    printf(" create_grpc_client");
 }
 
 void join_grpc_server()
@@ -69,13 +79,30 @@ void join_grpc_server()
 
 int send_sec_cfg_req(CuCpUpHdrG* cucp_up_hdr, SecurityConfigureG *secCfg)
 {
+    mav::GrpcAdpCntrl::getInstance()->client_lock(0);
     send_sec_cfg_count++;
     if(send_sec_cfg_count != 1) {
-        ccTrace("<<<<<<<<<<<<<<<<<<<<<<<< mutex >>>>>>>>>>>>>>>>>");
+        ccTrace("<<<<<<<<<<<<<<<<<<<<<<<< mutex >>>>>>>>>>>>>>>>> count %d ", send_sec_cfg_count);
     }
     int ret;
     ccTrace("Send sec cfg req: ");
     ret = mav::GrpcAdpCntrl::getInstance()->getGrpcClientThread().SendSecurityCfg(cucp_up_hdr,secCfg);
     send_sec_cfg_count--;
+    mav::GrpcAdpCntrl::getInstance()->client_unlock(0);
     return ret;
 }
+
+int send_sec_cfg_req_m(CuCpUpHdrG* cucp_up_hdr, SecurityConfigureG *secCfg)
+{
+    send_sec_cfg_count_m++;
+    if(send_sec_cfg_count_m != 1) {
+        ccTrace("<<<<<<<<<<<<<<<<<<<<<<<< mutex >>>>>>>>>>>>>>>>> count %d ", send_sec_cfg_count);
+    }
+    EbmGrpcClient record {"CP001", 1, "UP001"};
+    int ret;
+    ccTrace("Send sec cfg req: ");
+    ret = mav::GrpcAdpCntrl::getInstance()->getGrpcClientThread_M(record).SendSecurityCfg(cucp_up_hdr,secCfg);
+    send_sec_cfg_count_m--;
+    return ret;
+}
+

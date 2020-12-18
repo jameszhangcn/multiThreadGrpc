@@ -1,7 +1,25 @@
 #include "pthread.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <sched.h>
+
 #include "../include/GrpcAdp.h"
+#include "../include/EbmCfmCb.h"
+
+#include <unordered_map>
+#include <string>
+
+std::unordered_map <std::string,std::string> ebmMap;
+
+void add_ebm_map(char* ebmID, char* ipPort)
+{
+    ebmMap[ebmID] = ipPort;
+}
+
+char* get_ebm_ip_port(char* ebmID)
+{
+    return const_cast<char*>(ebmMap[ebmID].data());
+}
 
 void *grpcClient(void *arg){
     int ret;
@@ -31,7 +49,7 @@ void *grpcClient(void *arg){
     return arg;
 }
 
-#define MAX_CLIENT_THREAD_NUM (10)
+#define MAX_CLIENT_THREAD_NUM (100)
 
 int main(int argc, char *argv[])
 {
@@ -41,8 +59,32 @@ int main(int argc, char *argv[])
     int arg = 10;
     int *thread_ret[MAX_CLIENT_THREAD_NUM] = {NULL};
 
+    int cpu_num;
+
+    cpu_num = sysconf(_SC_NPROCESSORS_ONLN);
+    printf("cpu_num %d \n", cpu_num);
+
+    cpu_set_t mask;
+
+    CPU_ZERO(&mask);
+    CPU_SET(cpu_num-1, &mask);
+
+    if (pthread_setaffinity_np(pthread_self(),sizeof(mask), &mask) < 0) {
+        printf("set affinity failed 0");
+    }
+
     printf("This is the main process.\n");
     start_grpc_server();
+
+    add_ebm_map("EBM001", "127.0.0.1:9027");
+    add_ebm_map("EBM002", "127.0.0.1:9032");
+    add_ebm_map("EBM003", "127.0.0.1:9033");
+    add_ebm_map("EBM004", "127.0.0.1:9034");
+
+    create_grpc_client("CP001", 1, "EBM001");
+    create_grpc_client("CP001", 2, "EBM001");
+    create_grpc_client("CP001", 3, "EBM001");
+    create_grpc_client("CP001", 4, "EBM001");
     
     for (idx = 0; idx < MAX_CLIENT_THREAD_NUM; idx++) {
         ret = pthread_create( &th[idx], NULL, grpcClient, &arg);
@@ -50,6 +92,14 @@ int main(int argc, char *argv[])
             printf("Create grpcClient thread error!\n");
             return -1;
         }
+
+        CPU_ZERO(&mask);
+        CPU_SET((idx)%(cpu_num), &mask);
+
+        if (pthread_setaffinity_np(th[idx],sizeof(mask), &mask) < 0) {
+            printf("set affinity failed idx %d tid %x ", idx, th[idx]);
+        }
+
     }
 
     for (idx = 0; idx < MAX_CLIENT_THREAD_NUM; idx++) {

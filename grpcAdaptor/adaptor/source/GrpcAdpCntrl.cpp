@@ -39,6 +39,7 @@
 #include "SvcLog.h"
 #include "ServiceCommonType.h"
 
+
 namespace mav
 {
     GrpcAdpCntrl* GrpcAdpCntrl::mInstance = nullptr;
@@ -81,6 +82,11 @@ namespace mav
         std::string ebmGrpcPort = "9027";
         getGrpcClientThread().ebmServerTarget() = ebmGrpcIP + ":" + ebmGrpcPort;
         printf("CUCP ip : %s Port: %d ", ebmGrpcIP.c_str(), ebmGrpcPort.c_str());
+        //init the mutex
+        if (pthread_mutex_init(&this->mClientMutex, NULL) != 0){
+            ccLog(" client init mutex failed");
+        }
+
         return 0;
 
     }
@@ -100,11 +106,26 @@ namespace mav
     {
         unsigned char threadInstanceId = mThreadInstanceIdGen++;
         
-        mRpcClientThread.init(threadInstanceId);
+        mRpcClientThread[0]->init(threadInstanceId);
         aThreadInstanceId = threadInstanceId;
         ccLog("startGrpcClientThread  threadInstanceId %x ", threadInstanceId);
-        mRpcClientThread.run();
+        mRpcClientThread[0]->run();
         return 0;
+    }
+
+    int GrpcAdpCntrl::createGrpcClient(string cuCpID, long cuCpInst, string cuUpID)
+    {
+        EbmGrpcClient record {cuCpID, cuCpInst, cuUpID};
+        GrpcAdpRpcClientThread *grpcClient = new GrpcAdpRpcClientThread();
+        grpcClient->set_ebm_ip_port(cuUpID);
+        grpcClient->run();
+        mEbmClientMap.insert(pair<EbmGrpcClient,int>(record, 0));;
+    }
+
+    int GrpcAdpCntrl::destroyGrpcClient(string cuCpID, long cuCpInst, string cuUpID)
+    {
+        EbmGrpcClient client {cuCpID, cuCpInst, cuUpID};
+        mEbmClientMap.erase(client);
     }
 
     int GrpcAdpCntrl::createWorkerThreads()
@@ -135,6 +156,10 @@ namespace mav
     bool GrpcAdpCntrl::init()
     {
         unsigned char threadNum = mThreadInstanceIdGen;
+
+        for (int idx = 0; idx < MAX_GRPC_CLIENT_NUM; idx ++) {
+            mRpcClientThread[idx] = nullptr;
+        }
         
         createWorkerThreads();
 
@@ -143,9 +168,9 @@ namespace mav
         startGrpcServerThread(threadNum);
         ccLog("Start RPC Server thread %d ", threadNum);
 
-        initGrpcClientConfig();
+        //initGrpcClientConfig();
 
-        startGrpcClientThread(threadNum);
+        //startGrpcClientThread(threadNum);
         
         ccLog("Start RPC client thread %d ", threadNum);
 
@@ -156,6 +181,9 @@ namespace mav
     {
         GrpcAdpThreads::getInstance()->killRpcServerThread();
         GrpcAdpThreads::getInstance()->killRpcClientThread();
+        if (pthread_mutex_destroy(&this->mClientMutex) != 0){
+            ccLog(" client deinit mutex failed");
+        }
         return true;
     }
 
@@ -163,5 +191,55 @@ namespace mav
     {
         GrpcAdpThreads::getInstance()->joinRpcServerThread();
     }
+
+    void GrpcAdpCntrl::client_lock(int clientId)
+    {
+        if (pthread_mutex_lock(&this->mClientMutex) != 0){
+            ccLog(" client_lock failed client %d", clientId);
+        }
+        return;
+    }
+
+    void GrpcAdpCntrl::client_unlock(int clientId)
+    {
+        if (pthread_mutex_unlock(&this->mClientMutex) != 0){
+            ccLog(" client_unlock failed client %d", clientId);
+        }
+        return;
+    }
+
+    int GrpcAdpCntrl::create_client(char* cuCpID, long cuCpInst, char* cuUpID)
+    {
+        string cpID = cuCpID;
+        string upID = cuUpID;
+        return createGrpcClient(cpID, cuCpInst, upID);
+    }
+
+    int GrpcAdpCntrl::get_free_client_idx(GrpcAdpRpcClientThread* threadID)
+    {
+        int idx;
+        int ret = MAX_GRPC_CLIENT_NUM;
+        client_lock(0);
+        for (idx = 0; idx < MAX_GRPC_CLIENT_NUM; idx++) {
+            if (mRpcClientThread[idx] == nullptr) {
+                ret = idx;
+                mRpcClientThread[idx] = threadID;
+                break;
+            }
+        }
+        client_unlock(0);
+        return ret;
+    }
+
+    int GrpcAdpCntrl::release_client_idx(int index)
+    {
+
+        client_lock(0);
+        mRpcClientThread[index] = nullptr; 
+        client_unlock(0);
+        return 0;
+    }
+
+
 } // namespace mav
 
