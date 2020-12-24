@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package mhdr;
+
+//RID (ResourceID) is the identify of a dedicated resource to process the service, sn is the service name,
+//cid identifies the dedicated data resource that is associated with the current service request
+//cid could be empty for initial request or stateless request
+//Location is not part of RID, since it can be any where for each request from service processing point
+//For some stateful handling, Location is important, then application need set Location in message accordingly
+message RID {
+  // sn: serviceName, is a well known name that identifies a service, typically the format of Linux directory
+// such as: abc/def/srv
+  string sn  = 10;
+  //Component ID, the object ID inside the service for further identification 
+  string cid = 20;
+}
+enum Transport {
+  TCP = 0;
+  TLS = 1;
+}
+
+message Location {
+  Transport trport = 10;
+  string address = 20;
+  fixed32 port = 30;
+}
+//RouteInfo: Routing information, including resource ID and location
+message RouteInfo {
+  RID     rid = 10;
+  string  loc = 20;
+}
+
+//MsgHdr defines the generic head for all service request/response
+message MsgHdr{
+  uint32 version = 10;
+  bool isReq = 20;  // If request and response use the same method, this field will indicate the message type, otherwsie, it shall be ignored
+  uint32 rspCode = 30;
+  int32 method = 40;  // Method of the request/response
+  string methodName = 50; //String method of grpc
+  RID toRID = 60; // The destination resource
+  RID fromRID = 70; // The source resource
+  Location toLoc = 80; // The destination address/location
+  repeated Location altToLocs = 90; // Alternative to locations, When the toLoc is not reachable, if this field is available, it shall be retried
+  Location fromLoc = 100; // The source address/location (the location to receive subsequent request, not the client ip:port)
+  uint32 transID = 110; // Transaction ID
+  string sid =120; // Session/Dialog ID
+  string traceID = 130; // TraceID is common string across the whole dialog/transaction
+  //uint32 methodID = 120; // it's just for performance consideration, local concept, always be 0 in rpc 
+    //route:list of RouteInfo, if it is empty, the next hop is "to", otherwise it is the first entry of route
+    //The receiver shall remove the topmost route before forwarding
+    //Considering the routes and vias is used very rare, the performance is not major concern
+    //Otherwise a dedicated List shall be defined
+  repeated RouteInfo routes = 140;
+    //via:list of RouteInfo, it records the path that the message has been passed
+  repeated RouteInfo vias = 150;
+}

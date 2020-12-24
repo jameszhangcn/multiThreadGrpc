@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package common;
+
+enum SctpUser {
+    X2AP = 0;
+    NGAP = 1;
+    XNAP = 2;
+    F1AP = 3;
+    E1AP = 4;
+    UNDEFINED = 5;
+}
+
+message SctpCntrlInfo {
+    SctpUser sctp_user = 10;
+    uint32 ref_id = 20;  //For E1 interface, ref_id is CP ID, ranges from 0 to CPNum-1 
+    uint32 assoc_id = 30; //assoc_id is the id of one certain association between a CP/IWF pair. For E1 inteface, it ranges from 0 to 31
+}
+
+enum IpAddressType
+{
+    IPV4 = 0;
+    IPV6 = 1;
+}
+
+message IpAddress {
+    IpAddressType type = 10;
+    string addr = 20;
+}
+
+message SctpEndpoint {
+    uint32 num_ip_addrs = 10;
+    repeated IpAddress ip_addr_list = 20;
+    uint32 port_num = 30;
+}
+
+
+
+enum MsgType {
+    INVALID_MSG_TYPE = 0;
+    CU_CP_E1_RESET = 1;                               //F50 8.2.1
+    CU_CP_E1_RESET_ACK = 2;
+    CU_UP_E1_RESET = 3;
+    CU_UP_E1_RESET_ACK = 4;
+    CU_CP_ERROR_INDICATION = 5;                       //F50 8.2.2
+    CU_UP_ERROR_INDICATION = 6;
+    CU_CP_E1_SETUP_REQUEST = 7;                       //F50 8.2.3 and 8.2.4
+    CU_CP_E1_SETUP_RESPONSE = 8;
+    CU_CP_E1_SETUP_FAILURE = 9;
+    CU_UP_E1_SETUP_REQUEST = 10;
+    CU_UP_E1_SETUP_RESPONSE = 11;
+    CU_UP_E1_SETUP_FAILURE = 12;
+    CU_CP_CONFIGURATION_UPDATE = 13;                  //F50 8.2.5 and 8.2.6
+    CU_CP_CONFIGURATION_UPDATE_ACK = 14;
+    CU_CP_CONFIGURATION_UPDATE_FAILURE = 15;
+    CU_UP_CONFIGURATION_UPDATE = 16;
+    CU_UP_CONFIGURATION_UPDATE_ACK = 17;
+    CU_UP_CONFIGURATION_UPDATE_FAILURE = 18;
+    CU_CP_E1_RELEASE_REQUEST = 19;                    //F50 8.2.7
+    CU_CP_E1_RELEASE_RESPONSE = 20;
+    CU_UP_E1_RELEASE_REQUEST = 21;
+    CU_UP_E1_RELEASE_RESPONSE = 22;
+    CU_UP_STATUS_INDICATION = 23;                     //F50 8.2.8
+    BEARER_CONTEXT_SETUP_REQUEST = 24;                //F50 8.3.1   CP initiates
+    BEARER_CONTEXT_SETUP_RESPONSE = 25;
+    BEARER_CONTEXT_SETUP_FAILURE = 26;
+    BEARER_CONTEXT_MODIFY_REQUEST = 27;               //F50 8.3.2   CP initiates
+    BEARER_CONTEXT_MODIFY_RESPONSE = 28;
+    BEARER_CONTEXT_MODIFY_FAILURE = 29;
+    BEARER_CONTEXT_MODIFY_REQUIRED = 30;              //F50 8.3.3   UP initiates
+    BEARER_CONTEXT_MODIFY_CONFIRM = 31;
+    BEARER_CONTEXT_RELEASE_COMMAND = 32;              //F50 8.3.4   CP initiates
+    BEARER_CONTEXT_RELEASE_COMPLETE = 33;
+    BEARER_CONTEXT_RELEASE_REQUEST = 34;              //F50 8.3.5   UP initiates
+    BEARER_CONTEXT_INACTIVITY_NOTIFICATION = 35;      //F50 8.3.6   UP initiates
+    DL_DATA_NOTIFICATION = 36;                        //F50 8.3.7   UP initiates
+    DATA_USAGE_REPORT = 37;                           //F50 8.3.8   UP initiates
+    CU_UP_COUNTER_CHECK_REQUEST = 38;                 //F50 8.3.9   UP initiates
+    UL_DATA_NOTIFICATION = 39;                        //F50 8.3.10  UP initiates
+    MR_DC_DATA_USAGE_REPORT = 40;                     //F50 8.3.11  UP initiates
+}

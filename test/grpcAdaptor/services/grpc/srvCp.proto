@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+//Path: gofer/msghead
+import "mhdr.proto";
+import "structure.proto";
+
+//package srvCp defines the service provided by module ebmsvc
+package srvCp;
+
+service Cp {
+    rpc SecurityConfigureCfm (SecurityConfigureRsp) returns (CfmReply) {}
+    rpc CreateTunnelCfm (CreateTunnelRsp) returns (CfmReply) {}
+    rpc ModifyTunnelCfm (ModifyTunnelRsp) returns (CfmReply) {}
+    rpc DeleteTunnelCfm (DeleteTunnelRsp) returns (CfmReply) {}
+    rpc AddRbConfigureCfm (AddRbConfigureRsp) returns (CfmReply) {}
+	
+}
+//method must be unique , no change in the service scope
+enum method{
+    MethodUnknown = 0;
+	MethodSecurityConfigureCfmReq = 1;
+	MethodCreateTunnelCfmReq = 2;
+	MethodModifyTunnelCfmReq = 3;
+	MethodDeleteTunnelCfmReq = 4;
+	MethodAddRbConfigureCfmReq = 5;
+	MethodCfmReply = 6;
+}
+
+enum version{
+    VerUnknown= 0;
+    Ver = 1;
+}
+
+message SecurityConfigureRsp {
+    // The msghdr shall always be defined as hdr in all messages ,  the generated code is used as common code
+    mhdr.MsgHdr hdr = 10;
+    structure.CpUpHdr cp_up_hdr = 20;
+    bool    status = 30;
+    string  reason = 40;
+}
+
+message CreateTunnelRsp {
+    // The msghdr shall always be defined as hdr in all messages ,  the generated code is used as common code
+    mhdr.MsgHdr hdr = 10;
+    structure.CpUpHdr cp_up_hdr = 20;
+    uint32  local_gtp_teid = 30;
+    uint32  remote_gtp_teid = 35;
+    bool    status = 40;
+}
+
+message ModifyTunnelRsp {
+    // The msghdr shall always be defined as hdr in all messages ,  the generated code is used as common code
+    mhdr.MsgHdr hdr = 10;
+    structure.CpUpHdr cp_up_hdr = 20;
+    bool    status = 30;
+}
+
+message DeleteTunnelRsp {
+    // The msghdr shall always be defined as hdr in all messages ,  the generated code is used as common code
+    mhdr.MsgHdr hdr = 10;
+    structure.CpUpHdr cp_up_hdr = 20;
+    bool    status = 30;
+}
+
+message AddRbConfigureRsp {
+    // The msghdr shall always be defined as hdr in all messages ,  the generated code is used as common code
+    mhdr.MsgHdr hdr = 10;
+    structure.CpUpHdr cp_up_hdr = 20;
+    bool    status = 30;
+}
+
+message CfmReply {
+    // The msghdr shall always be defined as hdr in all messages ,  the generated code is used as common code
+    mhdr.MsgHdr hdr = 10;
+}
+

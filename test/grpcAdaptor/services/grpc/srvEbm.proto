@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+//Path: gofer/msghead
+import "mhdr.proto";
+import "structure.proto";
+
+//package srvEbm defines the service provided by module cpsvc
+package srvEbm;
+
+service Ebm {
+    rpc SecurityConfigure (SecurityConfigureReq) returns (ReqReply) {}
+    rpc CreateTunnel (CreateTunnelReq) returns (ReqReply) {}
+    rpc ModifyTunnel (ModifyTunnelReq) returns (ReqReply) {}
+    rpc DeleteTunnel (DeleteTunnelReq) returns (ReqReply) {}
+    rpc AddRbConfigure (AddRbConfigureReq) returns (ReqReply) {}
+}
+
+//method must be unique , no change in the service scope
+enum method{
+    MethodUnknown = 0;
+	MethodSecurityConfigureReq = 1;
+	MethodCreateTunnelReq = 2;
+	MethodModifyTunnelReq = 3;
+	MethodDeleteTunnelReq = 4;
+	MethodAddRbConfigureReq = 5;
+	MethodReqReply = 6;
+}
+
+enum version{
+    VerUnknown= 0;
+    Ver = 1;
+}
+
+message SecurityConfigureReq {
+    // The msghdr shall always be defined as hdr in all messages , the generated code is used as common code
+    mhdr.MsgHdr hdr = 10;
+    structure.CpUpHdr cp_up_hdr = 20;
+    structure.SecurityConfigure   security_config= 30;
+}
+
+message CreateTunnelReq {
+    // The msghdr shall always be defined as hdr in all messages , the generated code is used as common code
+    mhdr.MsgHdr hdr = 10;
+    structure.CpUpHdr cp_up_hdr = 20;
+    structure.GtpTunInfo  gtp_tnl_info = 30;
+}
+
+message ModifyTunnelReq {
+    // The msghdr shall always be defined as hdr in all messages , the generated code is used as common code
+    mhdr.MsgHdr hdr = 10;
+    structure.CpUpHdr cp_up_hdr = 20;
+    structure.GtpTunInfo  gtp_tnl_info = 30;
+}
+
+message DeleteTunnelReq {
+    // The msghdr shall always be defined as hdr in all messages , the generated code is used as common code
+    mhdr.MsgHdr hdr = 10;
+    structure.CpUpHdr cp_up_hdr = 20;
+}
+
+message AddRbConfigureReq {
+    // The msghdr shall always be defined as hdr in all messages , the generated code is used as common code
+    mhdr.MsgHdr hdr = 10;
+    structure.CpUpHdr cp_up_hdr = 20;
+    structure.PDCPConfigure   pdcp_configure = 30;
+}
+
+message ReqReply {
+    // The msghdr shall always be defined as hdr in all messages ,  the generated code is used as common code
+    mhdr.MsgHdr hdr = 10;
+}
+

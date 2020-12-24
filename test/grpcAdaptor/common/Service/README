@@ -1,0 +1,102 @@
+Refer to 5g_l2l3/defs/grpc/test for the sameple.
+
+1. Include the header
+#include "ServiceImpl.h"
+
+2. Link the object in Makefile.am
+common/objs/Service/libService.a
+
+3. For gRPC Client
+    3.1. Declare client object
+    DEF_RPC_CLIENT_OBJ(AppSctpUserMsgRxIndClient, App, SctpUserMsgRxInd, SctpUserMsgRxIndInfo);
+
+    3.2. Create channel
+    Suppose the server is listening on localhost:50052
+    std::shared_ptr<grpc::Channel> app_channel = grpc::CreateChannel("localhost:50052", grpc::InsecureChannelCredentials());
+
+    3.3. Create client
+    AppSctpUserMsgRxIndClient appSctpUserMsgRxInd(app_channel);
+
+    3.4. Send message to the server
+    SctpUserMsgRxIndInfo sctp;
+    appSctpUserMsgRxInd.Send(sctp);
+
+    3.5. The channel and the client object can be shared between threads.
+
+4. For gRPC Server
+    4.1. Declare server rpc type
+    enum RpcType {
+        SCTP_MSG_RX_IND,
+    };
+
+    4.2. Declare server object
+    DEF_RPC_SERVER_OBJ(SctpMsgRxIndCallData, SCTP_MSG_RX_IND, SctpMsgRxInd, GW, SctpMsg);
+
+    4.3. Define server class by inherited ServerImpl base class
+    class GWServer : public ServerImpl
+    {
+    public:
+        ~GWServer() {};
+        virtual void OnInit()
+        {
+            AddServiceHandler(SCTP_MSG_RX_IND);
+        }
+
+        virtual grpc::Service* getService()
+        {
+            return &mService;
+        }
+
+        virtual CallData* allocCallData(int aServiceType)
+        {
+            switch(aServiceType)
+            {
+            case SCTP_MSG_RX_IND:
+                return new SctpMsgRxIndCallData();
+            default:
+                ccLog("Unknown service type %d", aServiceType);
+                return nullptr;
+            }
+        };
+        virtual void deallocCallData(CallData* aCD)
+        {
+            delete aCD;
+        };
+        virtual void OnMessage(CallData& aCD)
+        {
+            switch(aCD.getRpcType())
+            {
+            case SCTP_MSG_RX_IND:
+                OnSctpMsgRxInd(dynamic_cast<SctpMsg&>(*aCD.getMessage()));
+                break;
+            default:
+                ccWarning("Unknown service type %d", aCD.getRpcType());
+                break;
+            }
+        }
+
+    private:
+        virtual void OnSctpMsgRxInd(SctpMsg& aInd)
+        {
+            // Do something
+        }
+
+        GW::AsyncService mService;
+    };
+
+    4.4. Register all the RPC in OnInit()
+    AddServiceHandler(SCTP_MSG_RX_IND);
+
+    4.5. Specify the object allocation/deallocation mechanism in allocCallData/deallocCallData
+
+    4.6. Handle the RPC request in OnMessage
+
+    4.7. Create the server thread
+    void rpc_server_thread()
+    {
+        GWServer server;
+        server.InitAndRun("0.0.0.0:50051"); // Listen on 0.0.0.0:50051
+    }
+    std::thread thread_ = std::thread(&rpc_server_thread);
+    thread_.join();
+

@@ -1,0 +1,2 @@
+all:
+SUBDIRS = objs
